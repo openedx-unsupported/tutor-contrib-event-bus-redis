@@ -1,0 +1,2 @@
+recursive-include tutorevent_bus_redis/patches *
+recursive-include tutorevent_bus_redis/templates *
