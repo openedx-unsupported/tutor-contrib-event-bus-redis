@@ -20,6 +20,33 @@ hooks.Filters.CONFIG_DEFAULTS.add_items(
         # Each new setting is a pair: (setting_name, default_value).
         # Prefix your setting names with 'EVENT_BUS_REDIS_'.
         ("EVENT_BUS_REDIS_VERSION", __version__),
+
+        # Version of https://github.com/openedx/event-bus-redis to install
+        # TODO: support forks
+        ("EVENT_BUS_REDIS_RELEASE", "0.3.2"),
+
+        # Prefix for topics sent over the event bus
+        ("EVENT_BUS_REDIS_TOPIC_PREFIX", "openedx"),
+
+        # Producer class which can send events to redis streams.
+        ("EVENT_BUS_REDIS_PRODUCER", "edx_event_bus_redis.create_producer"),
+
+        # Consumer class which can consume events from redis streams.
+        ("EVENT_BUS_REDIS_CONSUMER", "edx_event_bus_redis.RedisEventConsumer"),
+
+        # If the consumer encounters this many consecutive errors, exit with an error. This is intended to be used in a
+        # context where a management system (such as Kubernetes) will relaunch the consumer automatically.
+        # Default is "None", which means the consumer will never relaunch.
+        ("EVENT_BUS_REDIS_CONSUMER_CONSECUTIVE_ERRORS_LIMIT", 0),
+
+        # How long the consumer should wait for new entries in a stream.
+        # As we are running the consumer in a while True loop, changing this setting doesn't make much difference expect
+        # for changing number of monitoring messages while waiting for new events.
+        # https://redis.io/commands/xread/#blocking-for-data
+        ("EVENT_BUS_REDIS_CONSUMER_POLL_TIMEOUT", 60),
+
+        # Limits stream size to approximately this number
+        ("EVENT_BUS_REDIS_STREAM_MAX_LEN", 10_000),
     ]
 )
 
