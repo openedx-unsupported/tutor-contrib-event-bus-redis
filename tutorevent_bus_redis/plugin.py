@@ -33,6 +33,7 @@ hooks.Filters.CONFIG_DEFAULTS.add_items(
             [
                 "edx-event-bus-redis==0.3.2",
                 "edx-event-bus-kafka==v5.6.0",
+                "openedx-events==v9.5.1",
                 "confluent_kafka[avro,schema-registry]",
             ],
         ),
@@ -66,7 +67,7 @@ hooks.Filters.CONFIG_DEFAULTS.add_items(
         # If true, this will run a separate instance of redis just for the
         # event bus to prevent resource conflicts with other services
         # TODO: Implement this
-        # ("RUN_REDIS_SERVER", True),
+        # ("RUN_DEDICATED_REDIS_BUS_SERVER", True),
 
         # Prefix for topics sent over the event bus
         ("EVENT_BUS_REDIS_TOPIC_PREFIX", "openedx"),

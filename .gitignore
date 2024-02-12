@@ -2,6 +2,11 @@
 !.gitignore
 TODO
 __pycache__
+*.DS_Store*
 *.egg-info/
 /build/
 /dist/
+/.idea/
+venv/
+env/
+transifex_input.yaml
