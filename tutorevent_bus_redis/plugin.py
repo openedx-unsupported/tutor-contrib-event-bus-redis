@@ -20,6 +20,8 @@ hooks.Filters.CONFIG_DEFAULTS.add_items(
         # Each new setting is a pair: (setting_name, default_value).
         # Prefix your setting names with 'EVENT_BUS_REDIS_'.
         ("EVENT_BUS_REDIS_VERSION", __version__),
+        ("RUN_KAFKA_EVENT_BUS", True),
+        ("RUN_REDIS_EVENT_BUS", True),
     ]
 )
 
