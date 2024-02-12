@@ -1,4 +1,4 @@
-{% if RUN_KAFKA_EVENT_BUS %}
+{% if RUN_KAFKA_SERVER %}
 # needed by Kafka to keep track of nodes, topics, and messages.
 zookeeper:
     image: confluentinc/cp-zookeeper:6.2.1
@@ -36,6 +36,20 @@ kafka:
       CONFLUENT_METRICS_ENABLE: 'true'
       CONFLUENT_SUPPORT_CUSTOMER_ID: 'anonymous'
 
+# storage layer for data schemas in Kafka
+schema-registry:
+    image: confluentinc/cp-schema-registry:6.2.1
+    depends_on:
+      - kafka
+    ports:
+      - "18081:18081"
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: 'kafka:29092'
+      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:18081
+{% endif %}
+
+{% if RUN_KAFKA_SERVER and RUN_KAFKA_UI %}
 # browser app for monitoring local Kafka cluster. This is quite memory- and CPU-intensive, so it should only be used for local Kafka debugging
 kafka-control-center:
     image: confluentinc/cp-enterprise-control-center:6.2.1
@@ -52,16 +66,4 @@ kafka-control-center:
       CONTROL_CENTER_MONITORING_INTERCEPTOR_TOPIC_PARTITIONS: 1
       CONFLUENT_METRICS_TOPIC_REPLICATION: 1
       PORT: 9021
-
-# storage layer for data schemas in Kafka
-schema-registry:
-    image: confluentinc/cp-schema-registry:6.2.1
-    depends_on:
-      - kafka
-    ports:
-      - "18081:18081"
-    environment:
-      SCHEMA_REGISTRY_HOST_NAME: schema-registry
-      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: 'kafka:29092'
-      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:18081
 {% endif %}
