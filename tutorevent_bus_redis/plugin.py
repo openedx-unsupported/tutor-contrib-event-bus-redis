@@ -13,6 +13,24 @@ from .__about__ import __version__
 ########################################
 # CONFIGURATION
 ########################################
+# FIXME: Update this to a saner config structure less likely to break, and able
+# to activate and deactivate individual events more easily.
+PRODUCER_CONFIG = """{
+    'org.openedx.content_authoring.xblock.published.v1': {
+        'content-authoring-xblock-lifecycle':
+        {'event_key_field': 'xblock_info.usage_key', 'enabled': False},
+    'content-authoring-xblock-published':
+        {'event_key_field': 'xblock_info.usage_key', 'enabled': False},
+    },
+    'org.openedx.content_authoring.xblock.deleted.v1': {
+        'content-authoring-xblock-lifecycle':
+        {'event_key_field': 'xblock_info.usage_key', 'enabled': False},
+    },
+    'org.openedx.learning.auth.session.login.completed.v1': {
+        'user-login': {'event_key_field': 'user.pii.username', 'enabled': True},
+    },
+}
+"""
 
 hooks.Filters.CONFIG_DEFAULTS.add_items(
     [
@@ -37,25 +55,7 @@ hooks.Filters.CONFIG_DEFAULTS.add_items(
                 "confluent_kafka[avro,schema-registry]",
             ],
         ),
-
-        # These are a subset of known events, there are many more.
-        # FIXME: Update this to a saner config structure less likely to break
-        ("EVENT_BUS_PRODUCER_CONFIG", """{
-    'org.openedx.content_authoring.xblock.published.v1': {
-        'content-authoring-xblock-lifecycle':
-        {'event_key_field': 'xblock_info.usage_key', 'enabled': False},
-    'content-authoring-xblock-published':
-        {'event_key_field': 'xblock_info.usage_key', 'enabled': False},
-    },
-    'org.openedx.content_authoring.xblock.deleted.v1': {
-        'content-authoring-xblock-lifecycle':
-        {'event_key_field': 'xblock_info.usage_key', 'enabled': False},
-    },
-    'org.openedx.learning.auth.session.login.completed.v1': {
-        'user-login': {'event_key_field': 'user.pii.username', 'enabled': True},
-    },
-}
-        """),
+        ("EVENT_BUS_PRODUCER_CONFIG", PRODUCER_CONFIG),
 
         ######################################
         # redis backend settings

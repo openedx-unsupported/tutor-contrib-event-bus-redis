@@ -67,3 +67,23 @@ kafka-control-center:
       CONFLUENT_METRICS_TOPIC_REPLICATION: 1
       PORT: 9021
 {% endif %}
+
+{% if EVENT_BUS_BACKEND %}
+# This is just a stub test for showing how we could run consumers
+login-consumer:
+    image: docker.io/overhangio/openedx:17.0.1-nightly
+    environment:
+      SERVICE_VARIANT: lms
+      DJANGO_SETTINGS_MODULE: lms.envs.tutor.production
+    command: >
+        ./manage.py lms consume_events -t user-login -g user-activity-service {% if EVENT_BUS_BACKEND == "redis" %}--extra '{"consumer_name": "user-login-1"}'{% endif %}
+    restart: unless-stopped
+    volumes:
+      - ../apps/openedx/settings/lms:/openedx/edx-platform/lms/envs/tutor:ro
+      - ../apps/openedx/settings/cms:/openedx/edx-platform/cms/envs/tutor:ro
+      - ../apps/openedx/config:/openedx/config:ro
+      - ../../data/lms:/openedx/data
+      - ../../data/openedx-media:/openedx/media
+    depends_on:
+      - {% if EVENT_BUS_BACKEND == "redis" %}redis{% elif EVENT_BUS_BACKEND == "kafka" %}kafka{% endif %}
+{% endif %}
