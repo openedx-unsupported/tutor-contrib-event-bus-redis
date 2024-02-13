@@ -15,7 +15,7 @@ from .__about__ import __version__
 ########################################
 # FIXME: Update this to a saner config structure less likely to break, and able
 # to activate and deactivate individual events more easily.
-PRODUCER_CONFIG = """{
+PRODUCER_CONFIG = {
     'org.openedx.content_authoring.xblock.published.v1': {
         'content-authoring-xblock-lifecycle':
         {'event_key_field': 'xblock_info.usage_key', 'enabled': False},
@@ -30,7 +30,6 @@ PRODUCER_CONFIG = """{
         'user-login': {'event_key_field': 'user.pii.username', 'enabled': True},
     },
 }
-"""
 
 hooks.Filters.CONFIG_DEFAULTS.add_items(
     [
