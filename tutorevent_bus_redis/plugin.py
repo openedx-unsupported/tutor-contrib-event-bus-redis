@@ -48,7 +48,7 @@ hooks.Filters.CONFIG_DEFAULTS.add_items(
             # FIXME: We should only install the one that's configured
             "OPENEDX_EXTRA_PIP_REQUIREMENTS",
             [
-                "edx-event-bus-redis==0.3.2",
+                "edx-event-bus-redis==0.3.3",
                 "edx-event-bus-kafka==v5.6.0",
                 "openedx-events==v9.5.1",
                 "confluent_kafka[avro,schema-registry]",
