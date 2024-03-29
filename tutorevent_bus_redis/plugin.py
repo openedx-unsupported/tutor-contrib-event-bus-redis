@@ -27,7 +27,10 @@ PRODUCER_CONFIG = {
         {'event_key_field': 'xblock_info.usage_key', 'enabled': False},
     },
     'org.openedx.learning.auth.session.login.completed.v1': {
-        'user-login': {'event_key_field': 'user.pii.username', 'enabled': True},
+        'user-login': {'event_key_field': 'user.pii.username', 'enabled': False},
+    },
+    'org.openedx.analytics.tracking.event.emitted.v1': {
+        'analytics': {'event_key_field': 'tracking_log.name', 'enabled': True}
     },
 }
 
@@ -40,10 +43,11 @@ hooks.Filters.CONFIG_DEFAULTS.add_items(
 
         # Possible values are "kafka", "redis", or None to disable the
         # event bus
-        ("EVENT_BUS_BACKEND", "kafka"),
+        ("EVENT_BUS_BACKEND", "redis"),
 
         # Settings for producing events
         ("EVENT_BUS_SEND_CATALOG_INFO_SIGNAL", True),
+        ("EVENT_BUS_TRACKING_LOGS", True),
         (
             # FIXME: We should only install the one that's configured
             "OPENEDX_EXTRA_PIP_REQUIREMENTS",
@@ -52,16 +56,13 @@ hooks.Filters.CONFIG_DEFAULTS.add_items(
                 "edx-event-bus-kafka==v5.6.0",
                 "openedx-events==v9.5.1",
                 "confluent_kafka[avro,schema-registry]",
+                "git+https://github.com/openedx/platform-plugin-aspects.git@bmtcril/tracking_event_command",
             ],
         ),
         ("EVENT_BUS_PRODUCER_CONFIG", PRODUCER_CONFIG),
 
         ######################################
         # redis backend settings
-        # Version of https://github.com/openedx/event-bus-redis to install
-        # This is what follows 'pip install' so you can use official versions
-        # or install from forks / branches / PRs here
-        ("EVENT_BUS_REDIS_RELEASE", "edx-event-bus-redis=='0.3.2'"),
 
         # If true, this will run a separate instance of redis just for the
         # event bus to prevent resource conflicts with other services
@@ -101,18 +102,19 @@ hooks.Filters.CONFIG_DEFAULTS.add_items(
 
         # This will run schema-manager, zookeeper and kafka. Set to False if you
         # are using a 3rd party to host Kafka or managing it outside of Tutor.
-        ("RUN_KAFKA_SERVER", True),
+        ("RUN_KAFKA_SERVER", False),
 
         # This will run kafka-control-center. This consumes a lot of resources,
         # you can turn it off separately from the required services. Requires
         # RUN_KAFKA_SERVER to be True as well.
-        ("RUN_KAFKA_UI", True),
+        ("RUN_KAFKA_UI", False),
 
         ("EVENT_BUS_KAFKA_SCHEMA_REGISTRY_URL", "http://schema-registry:18081"),
         ("EVENT_BUS_KAFKA_BOOTSTRAP_SERVERS", "kafka:29092"),
         ("EVENT_BUS_KAFKA_PRODUCER", "edx_event_bus_kafka.create_producer"),
         ("EVENT_BUS_KAFKA_CONSUMER", "edx_event_bus_kafka.KafkaEventConsumer"),
         ("EVENT_BUS_KAFKA_TOPIC_PREFIX", "dev"),
+        ("EVENT_BUS_REDIS_CONNECTION_URL", "redis://{% if REDIS_USERNAME and REDIS_PASSWORD %}{{ REDIS_USERNAME }}:{{""REDIS_PASSWORD }}{% endif %}@{{ REDIS_HOST }}:{{ REDIS_PORT }}/5")
     ]
 )
 
