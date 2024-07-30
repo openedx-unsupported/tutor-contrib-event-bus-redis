@@ -13,6 +13,26 @@ from .__about__ import __version__
 ########################################
 # CONFIGURATION
 ########################################
+# FIXME: Update this to a saner config structure less likely to break, and able
+# to activate and deactivate individual events more easily.
+PRODUCER_CONFIG = {
+    'org.openedx.content_authoring.xblock.published.v1': {
+        'content-authoring-xblock-lifecycle':
+        {'event_key_field': 'xblock_info.usage_key', 'enabled': False},
+    'content-authoring-xblock-published':
+        {'event_key_field': 'xblock_info.usage_key', 'enabled': False},
+    },
+    'org.openedx.content_authoring.xblock.deleted.v1': {
+        'content-authoring-xblock-lifecycle':
+        {'event_key_field': 'xblock_info.usage_key', 'enabled': False},
+    },
+    'org.openedx.learning.auth.session.login.completed.v1': {
+        'user-login': {'event_key_field': 'user.pii.username', 'enabled': False},
+    },
+    'org.openedx.analytics.tracking.event.emitted.v1': {
+        'analytics': {'event_key_field': 'tracking_log.name', 'enabled': True}
+    },
+}
 
 hooks.Filters.CONFIG_DEFAULTS.add_items(
     [
@@ -20,6 +40,81 @@ hooks.Filters.CONFIG_DEFAULTS.add_items(
         # Each new setting is a pair: (setting_name, default_value).
         # Prefix your setting names with 'EVENT_BUS_REDIS_'.
         ("EVENT_BUS_REDIS_VERSION", __version__),
+
+        # Possible values are "kafka", "redis", or None to disable the
+        # event bus
+        ("EVENT_BUS_BACKEND", "redis"),
+
+        # Settings for producing events
+        ("EVENT_BUS_SEND_CATALOG_INFO_SIGNAL", True),
+        ("EVENT_BUS_TRACKING_LOGS", True),
+        (
+            # FIXME: We should only install the one that's configured
+            "OPENEDX_EXTRA_PIP_REQUIREMENTS",
+            [
+                "edx-event-bus-redis==0.3.3",
+                "edx-event-bus-kafka==v5.6.0",
+                "openedx-events==v9.5.1",
+                "confluent_kafka[avro,schema-registry]",
+                "git+https://github.com/openedx/platform-plugin-aspects.git@bmtcril/tracking_event_command",
+            ],
+        ),
+        ("EVENT_BUS_PRODUCER_CONFIG", PRODUCER_CONFIG),
+
+        ######################################
+        # redis backend settings
+
+        # If true, this will run a separate instance of redis just for the
+        # event bus to prevent resource conflicts with other services
+        # TODO: Implement this
+        # ("RUN_DEDICATED_REDIS_BUS_SERVER", True),
+
+        # Prefix for topics sent over the event bus
+        ("EVENT_BUS_REDIS_TOPIC_PREFIX", "openedx"),
+
+        # Producer class which can send events to redis streams.
+        ("EVENT_BUS_REDIS_PRODUCER", "edx_event_bus_redis.create_producer"),
+
+        # Consumer class which can consume events from redis streams.
+        ("EVENT_BUS_REDIS_CONSUMER", "edx_event_bus_redis.RedisEventConsumer"),
+
+        # If the consumer encounters this many consecutive errors, exit with an error. This is intended to be used in a
+        # context where a management system (such as Kubernetes) will relaunch the consumer automatically.
+        # Default is "None", which means the consumer will never relaunch.
+        ("EVENT_BUS_REDIS_CONSUMER_CONSECUTIVE_ERRORS_LIMIT", 0),
+
+        # How long the consumer should wait for new entries in a stream.
+        # As we are running the consumer in a while True loop, changing this setting doesn't make much difference expect
+        # for changing number of monitoring messages while waiting for new events.
+        # https://redis.io/commands/xread/#blocking-for-data
+        ("EVENT_BUS_REDIS_CONSUMER_POLL_TIMEOUT", 60),
+
+        # Limits stream size to approximately this number
+        ("EVENT_BUS_REDIS_STREAM_MAX_LEN", 10_000),
+
+        ######################################
+        # Kafka backend settings
+        # TODO: Move hard coded settings from local-docker-compose-services here
+        # Version of https://github.com/openedx/event-bus-kafka to install
+        # This is what follows 'pip install' so you can use official versions
+        # or install from forks / branches / PRs here
+        ("EVENT_BUS_KAFKA_RELEASE", "edx-event-bus-kafka=='v5.6.0'"),
+
+        # This will run schema-manager, zookeeper and kafka. Set to False if you
+        # are using a 3rd party to host Kafka or managing it outside of Tutor.
+        ("RUN_KAFKA_SERVER", False),
+
+        # This will run kafka-control-center. This consumes a lot of resources,
+        # you can turn it off separately from the required services. Requires
+        # RUN_KAFKA_SERVER to be True as well.
+        ("RUN_KAFKA_UI", False),
+
+        ("EVENT_BUS_KAFKA_SCHEMA_REGISTRY_URL", "http://schema-registry:18081"),
+        ("EVENT_BUS_KAFKA_BOOTSTRAP_SERVERS", "kafka:29092"),
+        ("EVENT_BUS_KAFKA_PRODUCER", "edx_event_bus_kafka.create_producer"),
+        ("EVENT_BUS_KAFKA_CONSUMER", "edx_event_bus_kafka.KafkaEventConsumer"),
+        ("EVENT_BUS_KAFKA_TOPIC_PREFIX", "dev"),
+        ("EVENT_BUS_REDIS_CONNECTION_URL", "redis://{% if REDIS_USERNAME and REDIS_PASSWORD %}{{ REDIS_USERNAME }}:{{""REDIS_PASSWORD }}{% endif %}@{{ REDIS_HOST }}:{{ REDIS_PORT }}/5")
     ]
 )
 

@@ -1,0 +1,42 @@
+# Backend independent settings for event production
+EVENT_BUS_PRODUCER_CONFIG = {{ EVENT_BUS_PRODUCER_CONFIG }}
+SEND_CATALOG_INFO_SIGNAL = {{ EVENT_BUS_SEND_CATALOG_INFO_SIGNAL }}
+
+
+{% if EVENT_BUS_BACKEND == 'redis' %}
+# redis connection url
+# https://redis.readthedocs.io/en/stable/examples/ssl_connection_examples.html#Connecting-to-a-Redis-instance-via-a-URL-string
+EVENT_BUS_REDIS_CONNECTION_URL = "{{ EVENT_BUS_REDIS_CONNECTION_URL }}"
+EVENT_BUS_TOPIC_PREFIX = "{{ EVENT_BUS_REDIS_TOPIC_PREFIX }}"
+EVENT_BUS_PRODUCER = "{{ EVENT_BUS_REDIS_PRODUCER }}"
+EVENT_BUS_CONSUMER = "{{ EVENT_BUS_REDIS_CONSUMER }}"
+{% if EVENT_BUS_REDIS_CONSUMER_CONSECUTIVE_ERRORS_LIMIT %}
+EVENT_BUS_REDIS_CONSUMER_CONSECUTIVE_ERRORS_LIMIT = int("{{ EVENT_BUS_REDIS_CONSUMER_CONSECUTIVE_ERRORS_LIMIT }}")
+{% endif %}
+EVENT_BUS_REDIS_CONSUMER_POLL_TIMEOUT = int("{{ EVENT_BUS_REDIS_CONSUMER_POLL_TIMEOUT }}")
+EVENT_BUS_REDIS_STREAM_MAX_LEN = int("{{ EVENT_BUS_REDIS_STREAM_MAX_LEN }}")
+{% endif %}
+
+{% if EVENT_BUS_BACKEND == 'kafka' %}
+EVENT_BUS_KAFKA_SCHEMA_REGISTRY_URL = "{{ EVENT_BUS_KAFKA_SCHEMA_REGISTRY_URL }}"
+EVENT_BUS_KAFKA_BOOTSTRAP_SERVERS = "{{ EVENT_BUS_KAFKA_BOOTSTRAP_SERVERS }}"
+EVENT_BUS_PRODUCER = "{{ EVENT_BUS_KAFKA_PRODUCER }}"
+EVENT_BUS_CONSUMER = "{{ EVENT_BUS_KAFKA_CONSUMER }}"
+EVENT_BUS_TOPIC_PREFIX = "{{ EVENT_BUS_KAFKA_TOPIC_PREFIX }}"
+{% endif %}
+
+{% if EVENT_BUS_TRACKING_LOGS %}
+SEND_TRACKING_EVENT_EMITTED_SIGNAL = True
+
+# Update the backends to use the event bus
+EVENT_TRACKING_BACKENDS["xapi"]["ENGINE"] = "eventtracking.backends.event_bus.EventBusRoutingBackend"
+EVENT_TRACKING_BACKENDS["caliper"]["ENGINE"] = "eventtracking.backends.event_bus.EventBusRoutingBackend"
+
+# Update backend to send events in sync mode
+EVENT_TRACKING_BACKENDS["xapi"]["OPTIONS"]["backends"]["xapi"]["ENGINE"] = "event_routing_backends.backends.sync_events_router.SyncEventsRouter"
+EVENT_TRACKING_BACKENDS["caliper"]["OPTIONS"]["backends"]["caliper"]["ENGINE"] = "event_routing_backends.backends.sync_events_router.SyncEventsRouter"
+
+# Remove caliper from the tracking backends to prevent double-event-emission
+EVENT_TRACKING_BACKENDS.pop("caliper")
+
+{% endif %}
